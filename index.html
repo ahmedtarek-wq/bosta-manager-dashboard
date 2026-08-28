@@ -1,0 +1,674 @@
+<title>داش بورد المدير</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --bg:#f4f5f8; --card:#ffffff; --border:#e3e5ea; --text:#191c24; --muted:#5c6270;
+    --accent:#1f3a8f; --accent-soft:#eaeefb;
+    --green:#0f8a4b; --green-soft:#e5f6ec;
+    --amber:#b4740e; --amber-soft:#fdf1de;
+    --red:#c0293c; --red-soft:#fbe7ea;
+    --gray-soft:#eef0f3;
+    --shadow: 0 1px 2px rgba(20,22,30,.05), 0 4px 14px rgba(20,22,30,.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#14161c; --card:#1c1f28; --border:#2c303c; --text:#eef0f4; --muted:#9aa0ae;
+      --accent:#7f9bff; --accent-soft:#22284a;
+      --green:#3ecf82; --green-soft:#123425;
+      --amber:#e3a63e; --amber-soft:#3a2c10;
+      --red:#f0697a; --red-soft:#3a1620;
+      --gray-soft:#262a34;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14161c; --card:#1c1f28; --border:#2c303c; --text:#eef0f4; --muted:#9aa0ae;
+    --accent:#7f9bff; --accent-soft:#22284a;
+    --green:#3ecf82; --green-soft:#123425;
+    --amber:#e3a63e; --amber-soft:#3a2c10;
+    --red:#f0697a; --red-soft:#3a1620;
+    --gray-soft:#262a34;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Segoe UI", Tahoma, "Noto Sans Arabic", Arial, sans-serif;
+    direction:rtl; text-align:right; line-height:1.65;
+    max-width:1080px; margin:0 auto; padding:28px 20px 64px;
+  }
+  h1,h2,h3{font-weight:700; line-height:1.35;}
+  .header{ margin-bottom:22px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+  .header .eyebrow{ color:var(--muted); font-size:13px; margin-bottom:6px; }
+  .header h1{ font-size:26px; margin:0 0 6px; }
+  .header .meta{ color:var(--muted); font-size:14px; }
+
+  .view{ display:none; }
+  .view.active{ display:block; animation:fadein .18s ease; }
+  @keyframes fadein{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+
+  .back-btn{
+    display:inline-flex; align-items:center; gap:6px; background:var(--card); border:1px solid var(--border);
+    color:var(--accent); font-weight:700; font-size:13.5px; padding:8px 16px; border-radius:999px;
+    cursor:pointer; box-shadow:var(--shadow); margin-bottom:18px;
+  }
+  .back-btn:hover{ background:var(--accent-soft); }
+
+  .detail-head{ margin-bottom:18px; }
+  .detail-head .eyebrow{ color:var(--muted); font-size:13px; margin-bottom:4px; }
+  .detail-head h2{ font-size:22px; margin:0 0 6px; }
+  .detail-head .meta{ color:var(--muted); font-size:13.5px; }
+
+  .section{ margin-top:32px; }
+  .section-title{
+    display:flex; align-items:center; gap:10px; margin-bottom:14px;
+  }
+  .section-title h2{ font-size:19px; margin:0; }
+  .section-title .badge-count{
+    font-size:12px; color:var(--muted); background:var(--gray-soft);
+    border-radius:999px; padding:3px 10px;
+  }
+  .section-sub{ color:var(--muted); font-size:13px; margin:-8px 0 14px; }
+
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:14px;
+    box-shadow:var(--shadow); padding:18px 20px; margin-bottom:14px;
+  }
+
+  .stat-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(130px,1fr)); gap:12px; margin-bottom:16px; }
+  .stat{
+    background:var(--card); border:1px solid var(--border); border-radius:12px;
+    padding:14px 14px; text-align:center; cursor:pointer; transition:transform .12s ease, box-shadow .12s ease;
+    font-family:inherit; width:100%; -webkit-tap-highlight-color:transparent;
+  }
+  .stat:hover{ transform:translateY(-2px); box-shadow:var(--shadow); border-color:var(--accent); }
+  .stat:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  .stat .num{ font-size:24px; font-weight:800; }
+  .stat .lbl{ font-size:12.5px; color:var(--muted); margin-top:2px; }
+  .stat .hint{ font-size:10.5px; color:var(--accent); margin-top:5px; opacity:.85; }
+  .stat.tone-red .num{ color:var(--red); }
+  .stat.tone-amber .num{ color:var(--amber); }
+  .stat.tone-green .num{ color:var(--green); }
+  .stat.tone-accent .num{ color:var(--accent); }
+
+  table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  .table-wrap{ overflow-x:auto; border:1px solid var(--border); border-radius:12px; }
+  th,td{ padding:9px 12px; text-align:right; border-bottom:1px solid var(--border); white-space:nowrap; }
+  thead th{ background:var(--gray-soft); font-weight:700; color:var(--muted); font-size:12.5px; }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody tr:hover{ background:var(--gray-soft); }
+  tbody tr.hl{ background:var(--accent-soft) !important; transition:background 1.6s ease; }
+
+  .pill{ display:inline-block; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:700; white-space:nowrap; }
+  .pill-done{ background:var(--green-soft); color:var(--green); }
+  .pill-pending{ background:var(--red-soft); color:var(--red); }
+  .pill-unclear{ background:var(--amber-soft); color:var(--amber); }
+  .pill-normal{ background:var(--gray-soft); color:var(--muted); }
+
+  .urgent-box{
+    background:var(--red-soft); border:1px solid var(--red); border-radius:16px; padding:20px 22px;
+  }
+  .urgent-box h2{ color:var(--red); font-size:20px; margin:0 0 4px; display:flex; align-items:center; gap:8px;}
+  .urgent-box .section-sub{ color:var(--red); opacity:.85; margin-bottom:16px; }
+  .urgent-item{
+    background:var(--card); border:1px solid var(--border); border-radius:12px;
+    padding:12px 16px; margin-bottom:10px; display:flex; gap:14px; align-items:flex-start;
+  }
+  .urgent-item:last-child{ margin-bottom:0; }
+  .urgent-rank{
+    flex:0 0 auto; width:26px; height:26px; border-radius:50%; background:var(--red);
+    color:#fff; font-weight:800; font-size:13px; display:flex; align-items:center; justify-content:center;
+    margin-top:2px;
+  }
+  .urgent-item .u-name{ font-weight:700; font-size:14.5px; }
+  .urgent-item .u-tags{ margin:6px 0 2px; display:flex; flex-wrap:wrap; gap:6px; }
+  .u-tag{
+    font-size:11px; background:var(--accent-soft); color:var(--accent); padding:3px 10px; border-radius:999px;
+    font-weight:700; border:none; cursor:pointer; font-family:inherit; -webkit-tap-highlight-color:transparent;
+  }
+  .u-tag:hover{ background:var(--accent); color:#fff; }
+  .urgent-item .u-desc{ font-size:13px; color:var(--muted); }
+
+  .goto-row{ display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:700; color:var(--accent);
+    background:none; border:none; cursor:pointer; padding:0; font-family:inherit; }
+  .goto-row:hover{ text-decoration:underline; }
+
+  .note{
+    background:var(--accent-soft); border:1px solid var(--border); border-radius:10px;
+    padding:10px 14px; font-size:13px; color:var(--text); margin-top:10px;
+  }
+  .note.warn{ background:var(--amber-soft); color:var(--amber); }
+  .footer{ margin-top:40px; padding-top:16px; border-top:1px solid var(--border); color:var(--muted); font-size:12.5px; text-align:center; }
+  a{ color:var(--accent); }
+</style>
+
+<!-- ===================== HOME VIEW ===================== -->
+<div class="view active" id="view-home">
+
+  <div class="header">
+    <div>
+      <div class="eyebrow">Bosta — محفظة Ahmed Tarek</div>
+      <h1>📊 داش بورد المدير — ملخص شامل</h1>
+      <div class="meta">تجميع آخر تحديثات 3 تاسكات مجدولة · تم التوليد الجمعة 28 أغسطس 2026</div>
+    </div>
+  </div>
+
+  <div class="urgent-box">
+    <h2>🚨 يحتاج انتباه فوري النهارده</h2>
+    <div class="section-sub">مجمّعة من التلات تاسكات — دوس على أي تصنيف تحت كل بيزنس عشان تشوف التفاصيل الكاملة</div>
+
+    <div class="urgent-item">
+      <div class="urgent-rank">1</div>
+      <div>
+        <div class="u-name">Dubai shoes</div>
+        <div class="u-tags">
+          <button class="u-tag" onclick="showView('view-absent','row-absent-dubai-shoes')">فحص الغياب</button>
+          <button class="u-tag" onclick="showView('view-perf','row-perf-dubai-shoes')">تحليل الأداء</button>
+          <button class="u-tag" onclick="showView('view-meta-uncertain','row-mu-dubai-shoes')">Meta ads</button>
+        </div>
+        <div class="u-desc">غايب النهارده (Pending) + دروب مستمر تدريجي من مايو (59.9%↓، من ~316 لـ127 شحنة) + حالة إعلانات Meta غير مؤكدة. أقوى إشارة مجمّعة من التلات تاسكات.</div>
+      </div>
+    </div>
+
+    <div class="urgent-item">
+      <div class="urgent-rank">2</div>
+      <div>
+        <div class="u-name">Zaahe</div>
+        <div class="u-tags">
+          <button class="u-tag" onclick="showView('view-perf','row-perf-zaahe')">تحليل الأداء</button>
+          <button class="u-tag" onclick="showView('view-meta-active','row-ma-zaahe')">Meta ads</button>
+        </div>
+        <div class="u-desc">دروب 85.4% في الشحنات (من ~329 لـ48) رغم إنه نشط جدًا على السوشيال ومازال شغال إعلان على Meta — تناقض واضح بين النشاط التسويقي وحجم الشحنات الفعلي.</div>
+      </div>
+    </div>
+
+    <div class="urgent-item">
+      <div class="urgent-rank">3</div>
+      <div>
+        <div class="u-name">underground egyy</div>
+        <div class="u-tags">
+          <button class="u-tag" onclick="showView('view-perf','row-perf-underground-egyy')">تحليل الأداء</button>
+        </div>
+        <div class="u-desc">أعلى دروب في المحفظة كلها: 99.7% (من ~361 شهريًا لشحنة واحدة بس في أغسطس). الموقع شغال بالكامل، بس السوشيال متوقف من 6-7 شهور. مفيش سبب ظاهر.</div>
+      </div>
+    </div>
+
+    <div class="urgent-item">
+      <div class="urgent-rank">4</div>
+      <div>
+        <div class="u-name">stan</div>
+        <div class="u-tags">
+          <button class="u-tag" onclick="showView('view-meta-active','row-ma-stan')">Meta ads</button>
+        </div>
+        <div class="u-desc">شغال 65 إعلان على Meta لكن شحناته الشهرية (MTD) = صفر تمامًا. يستاهل فحص فوري — احتمال مشكلة تتبع Business ID أو وقف تنفيذي فعلي.</div>
+      </div>
+    </div>
+
+    <div class="urgent-item">
+      <div class="urgent-rank">5</div>
+      <div>
+        <div class="u-name">FIMKAEG</div>
+        <div class="u-tags">
+          <button class="u-tag" onclick="showView('view-perf','row-perf-fimkaeg')">تحليل الأداء</button>
+          <button class="u-tag" onclick="showView('view-meta-uncertain','row-mu-fimkaeg')">Meta ads</button>
+        </div>
+        <div class="u-desc">دروب 97.1% (من ~238 شهريًا لـ7 بس في أغسطس)، والحساب لسه نشط على السوشيال (بوست قبل أسبوع). حالة إعلانات Meta غير مؤكدة أيضًا.</div>
+      </div>
+    </div>
+
+    <div class="urgent-item">
+      <div class="urgent-rank">6</div>
+      <div>
+        <div class="u-name">Old Street</div>
+        <div class="u-tags">
+          <button class="u-tag" onclick="showView('view-freshchurned','row-fc-old-street')">فحص الغياب</button>
+        </div>
+        <div class="u-desc">Fresh Churned وPending النهارده — أول مرة يغيب بشكل غير طبيعي (مفيش تاريخ غياب مشابه في الـ45 يوم اللي فاتوا). يستاهل تواصل قبل ما يتحول لـChurn فعلي.</div>
+      </div>
+    </div>
+
+    <div class="urgent-item">
+      <div class="urgent-rank">7</div>
+      <div>
+        <div class="u-name">7 بيزنسات غايبة فجأة (Pending)</div>
+        <div class="u-tags">
+          <button class="u-tag" onclick="showView('view-absent')">فحص الغياب</button>
+        </div>
+        <div class="u-desc">nefert، 2m group، MB3، Elle، مذهلة للعبايات، اركان فاشون، coachesdontplayco — شحن منتظم جدًا (83-92% من الأيام) وقفوا فجأة بعد يوم الأربعاء. مش طبيعي بالنسبالهم، يستاهلوا اتصال سريع.</div>
+      </div>
+    </div>
+
+    <div class="urgent-item">
+      <div class="urgent-rank">8</div>
+      <div>
+        <div class="u-name">CAESAR · Octopus · fash · SoartheProject · FAZZALI</div>
+        <div class="u-tags">
+          <button class="u-tag" onclick="showView('view-meta-active','row-ma-caesar')">Meta ads</button>
+        </div>
+        <div class="u-desc">بيصرفوا على إعلانات Meta فعّالة لكن حجم شحناتهم منخفض نسبيًا مقارنة بباقي البيزنسات النشطة — يستاهل مراجعة لمعرفة هل الإنفاق الإعلاني بيتحول لشحنات فعلاً أو لا.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 1 -->
+  <div class="section">
+    <div class="section-title">
+      <h2>1️⃣ فحص الغياب اليومي — بورتفوليو Smileys</h2>
+      <span class="badge-count">آخر تحديث: الجمعة 28 أغسطس، ~5:56 م</span>
+    </div>
+    <div class="section-sub">تاسك: bosta-absent-churned-daily-check — التشغيلة نجحت وطلع منها تقرير كامل. دوس على أي رقم تحت عشان تشوف قائمة البيزنسات.</div>
+
+    <div class="stat-grid">
+      <button class="stat tone-amber" onclick="showView('view-absent')">
+        <div class="num">22</div><div class="lbl">Absent</div><div class="hint">دوس لعرض القايمة ⟵</div>
+      </button>
+      <button class="stat tone-red" onclick="showView('view-churned')">
+        <div class="num">22</div><div class="lbl">Churned</div><div class="hint">دوس لعرض القايمة ⟵</div>
+      </button>
+      <button class="stat tone-red" onclick="showView('view-freshchurned')">
+        <div class="num">4</div><div class="lbl">Fresh Churned</div><div class="hint">دوس لعرض القايمة ⟵</div>
+      </button>
+      <button class="stat tone-accent" onclick="showView('view-absent-pending')">
+        <div class="num">9</div><div class="lbl">محتاجين متابعة (Pending)</div><div class="hint">دوس لعرض القايمة ⟵</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- SECTION 2 -->
+  <div class="section">
+    <div class="section-title">
+      <h2>2️⃣ فحص كامبينز Meta الأسبوعي — بيزنسات الفاشون</h2>
+      <span class="badge-count">آخر تحديث: الجمعة 28 أغسطس، ~6:22 م</span>
+    </div>
+    <div class="section-sub">تاسك: meta-campaigns-weekly-check — 90 من أصل 112 بيزنس عندهم Price Plan اتفحصوا. دوس على أي رقم تحت عشان تشوف قائمة البيزنسات.</div>
+
+    <div class="stat-grid">
+      <button class="stat tone-green" onclick="showView('view-meta-active')">
+        <div class="num">46</div><div class="lbl">شغالين إعلانات دلوقتي</div><div class="hint">دوس لعرض القايمة ⟵</div>
+      </button>
+      <button class="stat tone-amber" onclick="showView('view-meta-inactive')">
+        <div class="num">31</div><div class="lbl">مش شغالين إعلانات</div><div class="hint">دوس للتفاصيل ⟵</div>
+      </button>
+      <button class="stat tone-red" onclick="showView('view-meta-uncertain')">
+        <div class="num">13</div><div class="lbl">مش مؤكد</div><div class="hint">دوس لعرض القايمة ⟵</div>
+      </button>
+      <button class="stat tone-accent" onclick="showView('view-meta-lowroi')">
+        <div class="num">7</div><div class="lbl">صرف بلا عائد واضح</div><div class="hint">دوس لعرض القايمة ⟵</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- SECTION 3 -->
+  <div class="section">
+    <div class="section-title">
+      <h2>3️⃣ تحليل أداء البيزنس الأسبوعي — المحفظة كاملة</h2>
+      <span class="badge-count">آخر تحديث: الجمعة 28 أغسطس، ~6:27 م</span>
+    </div>
+    <div class="section-sub">تاسك: weekly-business-performance-analysis-bosta — مقارنة شحنات أغسطس (MTD) بمتوسط مايو/يونيو/يوليو. دوس على أي رقم تحت عشان تشوف قائمة البيزنسات.</div>
+
+    <div class="stat-grid">
+      <button class="stat tone-accent" onclick="showView('view-perf-portfolio')">
+        <div class="num">133</div><div class="lbl">إجمالي البورتفوليو</div><div class="hint">دوس للتفاصيل ⟵</div>
+      </button>
+      <button class="stat tone-amber" onclick="showView('view-perf-excluded')">
+        <div class="num">46</div><div class="lbl">مستبعدين (Churned بالكامل)</div><div class="hint">دوس للتفاصيل ⟵</div>
+      </button>
+      <button class="stat tone-accent" onclick="showView('view-perf-checked')">
+        <div class="num">87</div><div class="lbl">اتفحصوا فعليًا</div><div class="hint">دوس للتفاصيل ⟵</div>
+      </button>
+      <button class="stat tone-red" onclick="showView('view-perf')">
+        <div class="num">19</div><div class="lbl">Flagged (Dropping)</div><div class="hint">دوس لعرض القايمة ⟵</div>
+      </button>
+    </div>
+  </div>
+
+  <div class="footer">
+    البيانات دي كلها من آخر تشغيلة ناجحة مسجّلة لكل تاسك بتاريخ اليوم (28 أغسطس 2026). لا يوجد تاسك من التلاتة لسه ما اشتغلش أو فشل — كل الأقسام فيها تقرير حقيقي.
+  </div>
+</div>
+
+<!-- ===================== VIEW: ABSENT (22) ===================== -->
+<div class="view" id="view-absent">
+  <button class="back-btn" onclick="showView('view-home')">→ رجوع للرئيسية</button>
+  <div class="detail-head">
+    <div class="eyebrow">فحص الغياب اليومي · Smileys</div>
+    <h2>Absent — كل الـ22 بيزنس</h2>
+    <div class="meta">آخر تحديث: الجمعة 28 أغسطس، ~5:56 م · النهارده الجمعة فمفيش pickups بتتعمل، فعمود "طلب النهارده" No للكل بشكل طبيعي</div>
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>البيزنس</th><th>Business ID</th><th>آخر First Mile pickup</th><th>الحالة</th></tr></thead>
+        <tbody>
+          <tr id="row-absent-nefert"><td>nefert</td><td>HkJ65mLIaVWfdBYbd4o8a</td><td>26-8</td><td><span class="pill pill-pending">Pending</span></td></tr>
+          <tr id="row-absent-2m-group"><td>2m group</td><td>9ArMzaHnU0Ij69iIYnzTX</td><td>26-8</td><td><span class="pill pill-pending">Pending</span></td></tr>
+          <tr><td>Zeus Shields</td><td>3dKlRDnUyFyxngZ1jZFFf</td><td>مفيش (Fulfillment merchant)</td><td><span class="pill pill-done">Done</span></td></tr>
+          <tr id="row-absent-mb3"><td>MB3</td><td>cFN8PuYrY7m1hlsQIMjkZ</td><td>26-8</td><td><span class="pill pill-pending">Pending</span></td></tr>
+          <tr><td>FRG</td><td>5wn9ZNfe2aNoMP5DchMwc</td><td>23-8</td><td><span class="pill pill-done">Done</span></td></tr>
+          <tr><td>Basicwy</td><td>7oI6PlnOa2MfufCj2cb1G</td><td>26-8</td><td><span class="pill pill-done">Done</span></td></tr>
+          <tr id="row-absent-elle"><td>Elle</td><td>Lf4BtW1XMXdreIEFQc1jk</td><td>26-8</td><td><span class="pill pill-pending">Pending</span></td></tr>
+          <tr id="row-absent-mzhla"><td>مذهلة للعبايات</td><td>TQYFhRo7-</td><td>26-8</td><td><span class="pill pill-pending">Pending</span></td></tr>
+          <tr><td>Sorathebrand</td><td>gY7BPWowfoflBAFmKsuIF</td><td>26-8</td><td><span class="pill pill-done">Done</span></td></tr>
+          <tr><td>باليريون</td><td>BYgxEYoozPzQr8VQcw765</td><td>26-8</td><td><span class="pill pill-done">Done</span></td></tr>
+          <tr id="row-absent-arkan"><td>اركان فاشون</td><td>S1NEFK9Uwo4KSkHugu4Eu</td><td>26-8</td><td><span class="pill pill-pending">Pending</span></td></tr>
+          <tr><td>Soi</td><td>2wUYAibnA6ZzF7ksxrFHQ</td><td>26-8</td><td><span class="pill pill-done">Done</span></td></tr>
+          <tr><td>mr women fahsion</td><td>PhW5SCs1bVGTPHhdPU9vq</td><td>26-8</td><td><span class="pill pill-done">Done</span></td></tr>
+          <tr id="row-absent-coaches"><td>coachesdontplayco</td><td>IsgHDKCXjBnuHJ5VVLwKW</td><td>26-8</td><td><span class="pill pill-pending">Pending</span></td></tr>
+          <tr><td>Tivra</td><td>7tmCIzhwLQl2c9kpcZDsm</td><td>26-8</td><td><span class="pill pill-done">Done</span></td></tr>
+          <tr><td>Ex angels</td><td>we1jwDaqYFviqYhHCO0iM</td><td>25-8</td><td><span class="pill pill-done">Done</span></td></tr>
+          <tr id="row-absent-dubai-shoes"><td>Dubai shoes</td><td>8ruenGKXBRzZDFRTDHgDl</td><td>26-8</td><td><span class="pill pill-pending">Pending</span></td></tr>
+          <tr><td>Zaahe</td><td>IrhkorIcgU5lJPRrWyx1e</td><td>26-8</td><td><span class="pill pill-done">Done</span></td></tr>
+          <tr><td>Epris</td><td>d0Wva2LhvhMM19EJTzLW8</td><td>26-8</td><td><span class="pill pill-done">Done</span></td></tr>
+          <tr><td>shewomanstore</td><td>Hx5P3oyYQyUID7kT435yN</td><td>17-8</td><td><span class="pill pill-done">Done</span></td></tr>
+          <tr><td>roshoes</td><td>HACxYDqY9OtLYgozU4Syc</td><td>25-8</td><td><span class="pill pill-done">Done</span></td></tr>
+          <tr><td>FIMKAEG</td><td>7XehyFvul48gBLwQoYjuF</td><td>25-8</td><td><span class="pill pill-done">Done</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">8 من الـ22 لسه Pending، والباقي (14) طلعوا Done النهارده. اللي Pending منهم شحن منتظم جدًا (83-92% من الأيام) ووقف فجأة بعد الأربعاء — مش طبيعي بالنسبالهم.</div>
+  </div>
+</div>
+
+<!-- ===================== VIEW: ABSENT PENDING (9 combined) ===================== -->
+<div class="view" id="view-absent-pending">
+  <button class="back-btn" onclick="showView('view-home')">→ رجوع للرئيسية</button>
+  <div class="detail-head">
+    <div class="eyebrow">فحص الغياب اليومي · Smileys</div>
+    <h2>محتاجين متابعة النهارده — 9 بيزنس (Pending)</h2>
+    <div class="meta">8 من الـAbsent + 1 من الـFresh Churned</div>
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>البيزنس</th><th>التصنيف</th><th>آخر First Mile pickup</th></tr></thead>
+        <tbody>
+          <tr><td>nefert</td><td>Absent</td><td>26-8</td></tr>
+          <tr><td>2m group</td><td>Absent</td><td>26-8</td></tr>
+          <tr><td>MB3</td><td>Absent</td><td>26-8</td></tr>
+          <tr><td>Elle</td><td>Absent</td><td>26-8</td></tr>
+          <tr><td>مذهلة للعبايات</td><td>Absent</td><td>26-8</td></tr>
+          <tr><td>اركان فاشون</td><td>Absent</td><td>26-8</td></tr>
+          <tr><td>coachesdontplayco</td><td>Absent</td><td>26-8</td></tr>
+          <tr><td>Dubai shoes</td><td>Absent</td><td>26-8</td></tr>
+          <tr><td>Old Street</td><td>Fresh Churned</td><td>24-8</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">دول اللي يستاهلوا اتصال أو متابعة النهارده تحديدًا — الباقي من الـ22 Absent والـ22 Churned إما طلع Done أو Churn طبيعي (مثل SUTRA وJuno Babies وTohfa Accessories اللي بيغيبوا ويرجعوا بانتظام).</div>
+  </div>
+</div>
+
+<!-- ===================== VIEW: CHURNED (22, no per-business data) ===================== -->
+<div class="view" id="view-churned">
+  <button class="back-btn" onclick="showView('view-home')">→ رجوع للرئيسية</button>
+  <div class="detail-head">
+    <div class="eyebrow">فحص الغياب اليومي · Smileys</div>
+    <h2>Churned — 22 بيزنس</h2>
+    <div class="meta">آخر تحديث: الجمعة 28 أغسطس، ~5:56 م</div>
+  </div>
+  <div class="card">
+    <div class="note warn">آخر تقرير للتاسك ده ذكر العدد الإجمالي بس (22 بيزنس Churned) من غير ما يفصّل أسماءهم — لأن التركيز كان على البيزنسات اللي محتاجة إجراء (Pending) مش على قايمة الـChurn الكاملة. لو عايز الأسماء والتفاصيل بالكامل، شغّل التاسك تاني وهيديك القايمة الكاملة.</div>
+  </div>
+</div>
+
+<!-- ===================== VIEW: FRESH CHURNED (4) ===================== -->
+<div class="view" id="view-freshchurned">
+  <button class="back-btn" onclick="showView('view-home')">→ رجوع للرئيسية</button>
+  <div class="detail-head">
+    <div class="eyebrow">فحص الغياب اليومي · Smileys</div>
+    <h2>Fresh Churned — 4 بيزنس</h2>
+    <div class="meta">آخر تحديث: الجمعة 28 أغسطس، ~5:56 م</div>
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>البيزنس</th><th>آخر First Mile pickup</th><th>الحالة</th><th>ملاحظة</th></tr></thead>
+        <tbody>
+          <tr id="row-fc-old-street"><td>Old Street</td><td>24-8</td><td><span class="pill pill-pending">Pending</span></td><td>أول مرة يغيب بشكل غير طبيعي — مفيش تاريخ مشابه في الـ45 يوم اللي فاتوا</td></tr>
+          <tr><td>SUTRA</td><td>—</td><td><span class="pill pill-done">Done</span></td><td>عادته بيغيب ويرجع بانتظام</td></tr>
+          <tr><td>Juno Babies</td><td>—</td><td><span class="pill pill-done">Done</span></td><td>عادته بيغيب ويرجع بانتظام</td></tr>
+          <tr><td>Tohfa Accessories</td><td>—</td><td><span class="pill pill-done">Done</span></td><td>عادته بيغيب ويرجع بانتظام</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">Old Street هي الوحيدة من الأربعة اللي الغياب ده غير طبيعي بالنسبالها ومحتاجة تواصل عاجل.</div>
+  </div>
+</div>
+
+<!-- ===================== VIEW: META ACTIVE (46) ===================== -->
+<div class="view" id="view-meta-active">
+  <button class="back-btn" onclick="showView('view-home')">→ رجوع للرئيسية</button>
+  <div class="detail-head">
+    <div class="eyebrow">فحص كامبينز Meta الأسبوعي · بيزنسات الفاشون</div>
+    <h2>شغالين إعلانات Meta دلوقتي — 46 بيزنس</h2>
+    <div class="meta">آخر تحديث: الجمعة 28 أغسطس، ~6:22 م · مرتبة تنازليًا حسب شحنات الشهر الحالي MTD</div>
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>الاسم</th><th>نشط؟</th><th>العرض/الرسالة</th><th>خصم على الموقع؟</th><th>شحنات MTD</th></tr></thead>
+        <tbody>
+          <tr><td>VEGA</td><td>نشط</td><td>Sale up to 50% off</td><td>نعم</td><td>3027</td></tr>
+          <tr><td>nefert</td><td>نشط</td><td>هدايا/طقم إكسسوارات</td><td>لا</td><td>1141</td></tr>
+          <tr><td>everyher</td><td>نشط</td><td>Limited time sale على التوبات</td><td>نعم</td><td>1121</td></tr>
+          <tr><td>kidliner</td><td>نشط</td><td>خصم 40% لفترة محدودة</td><td>نعم</td><td>1116</td></tr>
+          <tr><td>elvira</td><td>نشط</td><td>15% off everything</td><td>نعم</td><td>1062</td></tr>
+          <tr><td>SKMEI</td><td>نشط</td><td>ساعات بأسعار مخفضة</td><td>نعم</td><td>1026</td></tr>
+          <tr><td>عالم المجوهرات</td><td>نشط</td><td>إكسسوارات دهب صيني</td><td>لا</td><td>889</td></tr>
+          <tr><td>REVX WEAR</td><td>نشط</td><td>599 بدل 850ج</td><td>نعم</td><td>879</td></tr>
+          <tr><td>ZELIE</td><td>نشط</td><td>تخفيضات (1600→1300 وغيرها)</td><td>نعم</td><td>855</td></tr>
+          <tr><td>Slipngo</td><td>نشط</td><td>Limited stock</td><td>نعم (جزئي)</td><td>825</td></tr>
+          <tr><td>Vintage</td><td>نشط</td><td>بلا نسبة محددة</td><td>نعم</td><td>806</td></tr>
+          <tr><td>نارمر فاشون</td><td>نشط</td><td>خصم حتى 300ج على 4 قطع</td><td>نعم</td><td>748</td></tr>
+          <tr><td>Minilet</td><td>نشط</td><td>Sale is live</td><td>لا</td><td>738</td></tr>
+          <tr><td>Bahgat store</td><td>نشط</td><td>خصم 5% على الساعات</td><td>نعم (خصومات كبيرة)</td><td>729</td></tr>
+          <tr><td>غيمة</td><td>نشط</td><td>خصومات حتى 33%</td><td>نعم (حتى 29%)</td><td>724</td></tr>
+          <tr><td>tat</td><td>نشط</td><td>Big discount</td><td>نعم</td><td>684</td></tr>
+          <tr><td>Elan</td><td>نشط</td><td>Flash sale حتى 50%</td><td>نعم</td><td>676</td></tr>
+          <tr><td>براند فاشون</td><td>نشط</td><td>عروض ساعات</td><td>نعم</td><td>652</td></tr>
+          <tr><td>Ezabilla</td><td>نشط</td><td>خصومات حتى 50%</td><td>نعم</td><td>651</td></tr>
+          <tr><td>Zeus Shields</td><td>نشط</td><td>رسائل توعية بالمنتج</td><td>نعم (18%)</td><td>590</td></tr>
+          <tr><td>KUSH</td><td>نشط</td><td>30% Sitewide Sale</td><td>نعم</td><td>549</td></tr>
+          <tr><td>Reborn</td><td>نشط</td><td>بلا نسبة محددة</td><td>نعم (Buy4Get10%)</td><td>522</td></tr>
+          <tr><td>Trendy And Sporty</td><td>نشط</td><td>عروض كأس العالم</td><td>نعم (حتى 50%)</td><td>483</td></tr>
+          <tr><td>FRG</td><td>نشط</td><td>خصم 70% على القطعة التانية</td><td>نعم (20%)</td><td>476</td></tr>
+          <tr><td>As shopping</td><td>نشط (إعلان واحد)</td><td>بلا رسالة واضحة</td><td>لا يوجد موقع</td><td>468</td></tr>
+          <tr><td>Spiaggia swimwear</td><td>نشط</td><td>Clearance حتى 40%</td><td>نعم</td><td>414</td></tr>
+          <tr><td>Lebssy</td><td>نشط (إعلان واحد)</td><td>بلا خصم واضح</td><td>لا</td><td>395</td></tr>
+          <tr><td>Basicwy</td><td>نشط</td><td>بلا نسبة محددة</td><td>نعم (حتى 40%)</td><td>390</td></tr>
+          <tr><td>Picniceg</td><td>نشط</td><td>خصم 50% على الشحن وعروض</td><td>نعم</td><td>368</td></tr>
+          <tr><td>Hadya</td><td>نشط</td><td>Clearance Sale</td><td>نعم</td><td>358</td></tr>
+          <tr><td>BYNARI</td><td>نشط</td><td>بلا نسبة محددة</td><td>نعم</td><td>352</td></tr>
+          <tr id="row-ma-mzly"><td>Mzly</td><td>نشط</td><td>بلا خصم واضح بالإعلان</td><td>نعم</td><td>312</td></tr>
+          <tr><td>Ora Jewellery</td><td>نشط</td><td>Buy2Get1Free</td><td>لا</td><td>308</td></tr>
+          <tr><td>HW Jewllery</td><td>نشط</td><td>بلا خصم واضح بالإعلان</td><td>نعم (25% للمسجلين الجدد)</td><td>283</td></tr>
+          <tr><td>Soi</td><td>نشط</td><td>بلا خصم واضح</td><td>نعم</td><td>213</td></tr>
+          <tr><td>natOnat</td><td>نشط</td><td>بلا خصم واضح</td><td>لا</td><td>212</td></tr>
+          <tr><td>Sports Mall</td><td>نشط</td><td>خصم حصري حتى 50%</td><td>نعم</td><td>193</td></tr>
+          <tr><td>Normandy Shoes</td><td>نشط</td><td>خصومات على مقاسات معينة</td><td>نعم</td><td>157</td></tr>
+          <tr><td>Zeina</td><td>نشط</td><td>Buy3Get1Free</td><td>نعم</td><td>149</td></tr>
+          <tr id="row-ma-fazzali"><td>FAZZALI</td><td>نشط</td><td>خصم حتى 70%</td><td>لا</td><td>136</td></tr>
+          <tr id="row-ma-fash"><td>fash</td><td>نشط</td><td>سعر أقل لفترة محدودة</td><td>نعم</td><td>115</td></tr>
+          <tr id="row-ma-soartheproject"><td>SoartheProject</td><td>نشط</td><td>BOGO</td><td>لا</td><td>101</td></tr>
+          <tr id="row-ma-octopus"><td>Octopus</td><td>نشط</td><td>خصومات حتى 50%</td><td>نعم</td><td>59</td></tr>
+          <tr id="row-ma-zaahe"><td>Zaahe</td><td>نشط (إعلان واحد بس)</td><td>بلا عرض واضح</td><td>لم يُفحص (حجم صغير)</td><td>48</td></tr>
+          <tr id="row-ma-caesar"><td>CAESAR</td><td>نشط</td><td>Buy4Get1Free</td><td>نعم</td><td>27</td></tr>
+          <tr id="row-ma-stan"><td>stan</td><td>نشط (65 إعلان!)</td><td>"Sale is on" لبعض المنتجات</td><td>لا</td><td>0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">القايمة دي (112 بيزنس Fashion، 90 منهم عندهم Price Plan) ثابتة زي ما وصلتني، مش متجددة أوتوماتيك — يفضل مراجعتها يدويًا كل فترة.</div>
+  </div>
+</div>
+
+<!-- ===================== VIEW: META INACTIVE (31, no detail) ===================== -->
+<div class="view" id="view-meta-inactive">
+  <button class="back-btn" onclick="showView('view-home')">→ رجوع للرئيسية</button>
+  <div class="detail-head">
+    <div class="eyebrow">فحص كامبينز Meta الأسبوعي · بيزنسات الفاشون</div>
+    <h2>مش شغالين إعلانات — 31 بيزنس</h2>
+    <div class="meta">آخر تحديث: الجمعة 28 أغسطس، ~6:22 م</div>
+  </div>
+  <div class="card">
+    <div class="note warn">نتيجة "No ads match" واضحة على Meta Ad Library، لكن آخر تقرير للتاسك ما ذكرش أسماء الـ31 بيزنس دول بالتفصيل — بس العدد الإجمالي. لو عايز الأسماء، شغّل التاسك تاني.</div>
+  </div>
+</div>
+
+<!-- ===================== VIEW: META UNCERTAIN (13) ===================== -->
+<div class="view" id="view-meta-uncertain">
+  <button class="back-btn" onclick="showView('view-home')">→ رجوع للرئيسية</button>
+  <div class="detail-head">
+    <div class="eyebrow">فحص كامبينز Meta الأسبوعي · بيزنسات الفاشون</div>
+    <h2>مش مؤكد — 13 بيزنس</h2>
+    <div class="meta">آخر تحديث: الجمعة 28 أغسطس، ~6:22 م · نتيجة فاضية متكررة من الأد لايبراري، أو تطابق اسم غير مؤكد</div>
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>البيزنس</th></tr></thead>
+        <tbody>
+          <tr id="row-mu-fimkaeg"><td>FIMKAEG</td></tr>
+          <tr id="row-mu-dubai-shoes"><td>Dubai shoes</td></tr>
+          <tr><td>MB3</td></tr>
+          <tr><td>Na scrubs</td></tr>
+          <tr><td>BusyMen</td></tr>
+          <tr><td>Sorathebrand</td></tr>
+          <tr><td>shewomanstore</td></tr>
+          <tr><td>Secret cotton</td></tr>
+          <tr><td>Elle</td></tr>
+          <tr><td>Hexa Sportswear</td></tr>
+          <tr><td>Pro fit stock</td></tr>
+          <tr><td>Juno Babies</td></tr>
+          <tr><td>diva</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">محتاجين مراجعة يدوية للتأكد من حالة الإعلانات الحقيقية.</div>
+  </div>
+</div>
+
+<!-- ===================== VIEW: META LOW ROI (7) ===================== -->
+<div class="view" id="view-meta-lowroi">
+  <button class="back-btn" onclick="showView('view-home')">→ رجوع للرئيسية</button>
+  <div class="detail-head">
+    <div class="eyebrow">فحص كامبينز Meta الأسبوعي · بيزنسات الفاشون</div>
+    <h2>صرف إعلاني بدون عائد شحنات واضح — 7 بيزنس</h2>
+    <div class="meta">آخر تحديث: الجمعة 28 أغسطس، ~6:22 م</div>
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>الاسم</th><th>حالة الإعلان</th><th>شحنات MTD</th></tr></thead>
+        <tbody>
+          <tr><td>stan</td><td>65 إعلان نشط</td><td><span class="pill pill-pending">0</span></td></tr>
+          <tr><td>CAESAR</td><td>نشط</td><td>27</td></tr>
+          <tr><td>Zaahe</td><td>نشط (إعلان واحد)</td><td>48</td></tr>
+          <tr><td>Octopus</td><td>نشط</td><td>59</td></tr>
+          <tr><td>SoartheProject</td><td>نشط</td><td>101</td></tr>
+          <tr><td>fash</td><td>نشط</td><td>115</td></tr>
+          <tr><td>FAZZALI</td><td>نشط</td><td>136</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">stan تحديدًا يستاهل فحص فوري — 65 إعلان نشط وصفر شحنات تمامًا.</div>
+  </div>
+</div>
+
+<!-- ===================== VIEW: PERF FLAGGED (19) ===================== -->
+<div class="view" id="view-perf">
+  <button class="back-btn" onclick="showView('view-home')">→ رجوع للرئيسية</button>
+  <div class="detail-head">
+    <div class="eyebrow">تحليل أداء البيزنس الأسبوعي</div>
+    <h2>Flagged (Dropping) — 19 بيزنس</h2>
+    <div class="meta">آخر تحديث: الجمعة 28 أغسطس، ~6:27 م · مرتبة حسب متوسط الشحنات الشهري (الأعلى أولًا)</div>
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>البيزنس</th><th>متوسط/شهر</th><th>أغسطس الحالي</th><th>% الانخفاض</th><th>ملاحظة</th></tr></thead>
+        <tbody>
+          <tr id="row-perf-mzly"><td>Mzly</td><td>~674</td><td>330</td><td>51%</td><td><span class="pill pill-normal">دروب من يونيو</span></td></tr>
+          <tr><td>Lama corsets</td><td>~460</td><td>294</td><td>36%</td><td><span class="pill pill-normal">أقل الحالات حدة</span></td></tr>
+          <tr id="row-perf-fazzali"><td>FAZZALI</td><td>~384</td><td>146</td><td>62%</td><td><span class="pill pill-unclear">يحتمل تحول لفروع فعلية</span></td></tr>
+          <tr id="row-perf-underground-egyy"><td>underground egyy</td><td>~361</td><td>1</td><td>99.7%</td><td><span class="pill pill-pending">عاجل جدًا — بلا سبب</span></td></tr>
+          <tr><td>Roya</td><td>~358</td><td>186</td><td>48%</td><td><span class="pill pill-unclear">يوليو كان استثنائي</span></td></tr>
+          <tr><td>اركان فاشون</td><td>~340</td><td>228</td><td>33%</td><td><span class="pill pill-unclear">ممكن تصحيح طبيعي</span></td></tr>
+          <tr id="row-perf-zaahe"><td>Zaahe</td><td>~329</td><td>48</td><td>85%</td><td><span class="pill pill-pending">عاجل — نشط بس دروب حاد</span></td></tr>
+          <tr id="row-perf-dubai-shoes"><td>Dubai shoes</td><td>~316</td><td>127</td><td>60%</td><td><span class="pill pill-pending">دروب تدريجي من مايو</span></td></tr>
+          <tr id="row-perf-octopus"><td>Octopus</td><td>~247</td><td>61</td><td>75%</td><td><span class="pill pill-normal">محتاج تواصل</span></td></tr>
+          <tr><td>ALMAANDCO</td><td>~241</td><td>99</td><td>59%</td><td><span class="pill pill-unclear">سوشيال متباطئ</span></td></tr>
+          <tr id="row-perf-fimkaeg"><td>FIMKAEG</td><td>~238</td><td>7</td><td>97%</td><td><span class="pill pill-pending">عاجل — بلا سبب</span></td></tr>
+          <tr id="row-perf-fash"><td>fash</td><td>~235</td><td>118</td><td>50%</td><td><span class="pill pill-unclear">اسم عام، يحتاج تأكيد حساب</span></td></tr>
+          <tr><td>SUTRA</td><td>~184</td><td>68</td><td>63%</td><td><span class="pill pill-normal">دروب أساسي من يونيو</span></td></tr>
+          <tr id="row-perf-caesar"><td>CAESAR</td><td>~92</td><td>29</td><td>68.5%</td><td><span class="pill pill-normal">محتاج تواصل</span></td></tr>
+          <tr><td>Tohfa Accessories</td><td>~89</td><td>6</td><td>93%</td><td><span class="pill pill-normal">محتاج تواصل عاجل</span></td></tr>
+          <tr><td>Cozy nest</td><td>~74</td><td>9</td><td>88%</td><td><span class="pill pill-pending">عاجل — نشط بس بلا سبب</span></td></tr>
+          <tr><td>Cameron Kids</td><td>~11</td><td>0</td><td>100%</td><td><span class="pill pill-done">حجم صغير — أولوية منخفضة</span></td></tr>
+          <tr><td>Coverelle</td><td>~10</td><td>0</td><td>100%</td><td><span class="pill pill-done">حجم صغير — أولوية منخفضة</span></td></tr>
+          <tr><td>Flora</td><td>~4</td><td>0</td><td>100%</td><td><span class="pill pill-done">حجم صغير — أولوية منخفضة</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">الأولوية الفعلية للوقت: أعلى 8 بيزنسات (Mzly → Dubai shoes، كل واحد فوق 300 شحنة/شهر) هما اللي يستاهلوا التركيز الأول. آخر 3 (Cameron Kids, Coverelle, Flora) أحجامهم صغيرة جدًا ومش هتفرق حتى لو اتحلت بالكامل.</div>
+  </div>
+</div>
+
+<!-- ===================== VIEW: PERF PORTFOLIO / EXCLUDED / CHECKED (no per-business detail) ===================== -->
+<div class="view" id="view-perf-portfolio">
+  <button class="back-btn" onclick="showView('view-home')">→ رجوع للرئيسية</button>
+  <div class="detail-head">
+    <div class="eyebrow">تحليل أداء البيزنس الأسبوعي</div>
+    <h2>إجمالي البورتفوليو — 133 بيزنس</h2>
+  </div>
+  <div class="card">
+    <div class="note">إجمالي البيزنسات في محفظة Bosta وقت تشغيل التاسك. منهم 46 مستبعدين (Churned بالكامل) و87 اتفحصوا فعليًا، و19 من الـ87 طلعوا Flagged. آخر تقرير ما فصّلش أسماء الـ133 كاملة — بس النتيجة النهائية (الـ19 Flagged).</div>
+    <div style="margin-top:10px;">
+      <button class="goto-row" onclick="showView('view-perf')">↩ شوف قائمة الـ19 Flagged</button>
+    </div>
+  </div>
+</div>
+
+<div class="view" id="view-perf-excluded">
+  <button class="back-btn" onclick="showView('view-home')">→ رجوع للرئيسية</button>
+  <div class="detail-head">
+    <div class="eyebrow">تحليل أداء البيزنس الأسبوعي</div>
+    <h2>مستبعدين (Churned بالكامل) — 46 بيزنس</h2>
+  </div>
+  <div class="card">
+    <div class="note warn">دول بيزنسات حجم شحناتهم في يوليو كان صفر بالكامل، فاتستبعدوا من مقارنة الأداء من الأساس. آخر تقرير للتاسك ما ذكرش أسماءهم بالتفصيل — بس العدد الإجمالي.</div>
+  </div>
+</div>
+
+<div class="view" id="view-perf-checked">
+  <button class="back-btn" onclick="showView('view-home')">→ رجوع للرئيسية</button>
+  <div class="detail-head">
+    <div class="eyebrow">تحليل أداء البيزنس الأسبوعي</div>
+    <h2>اتفحصوا فعليًا — 87 بيزنس</h2>
+  </div>
+  <div class="card">
+    <div class="note">من الـ87 دول، 19 طلعوا Flagged (دروب حقيقي) والباقي (68) أداؤهم طبيعي مقارنة بمتوسط آخر 3 شهور. آخر تقرير ركّز على الـ19 المُشكلة بس ولم يورد قائمة كاملة بالـ68 الطبيعيين.</div>
+    <div style="margin-top:10px;">
+      <button class="goto-row" onclick="showView('view-perf')">↩ شوف قائمة الـ19 Flagged</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showView(id, rowId){
+    document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });
+    var target = document.getElementById(id);
+    if(target){ target.classList.add('active'); }
+    window.scrollTo({top:0, behavior:'instant'});
+    if(rowId){
+      setTimeout(function(){
+        var row = document.getElementById(rowId);
+        if(row){
+          row.scrollIntoView({behavior:'smooth', block:'center'});
+          row.classList.add('hl');
+          setTimeout(function(){ row.classList.remove('hl'); }, 2200);
+        }
+      }, 60);
+    }
+  }
+</script>
