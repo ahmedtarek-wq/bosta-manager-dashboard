@@ -1,0 +1,266 @@
+<title>Hub Contact Tree</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: Bosta web-dashboard pattern — white top nav, left sidebar of area managers, main grid of hub cards; each card is a call ladder. */
+/* Single dark theme by choice (always dark, regardless of device setting). */
+:root{
+  --brand:#2FCFDE; --brand-600:#2FCFDE; --brand-700:#6FE0EA; --brand-50:#0F2E33; --brand-ring:#134048;
+  --bg:#0C111D; --surface:#161B26; --ink:#F5F5F6; --ink-2:#CECFD2; --muted:#94969C; --line:#1F242F; --line-2:#333741;
+  --warn:#FDB022; --warn-bg:#2A1F0A; --warn-line:#4E3A0F; --shadow:0 1px 2px rgba(0,0,0,.4);
+  --f:"Inter",system-ui,"Segoe UI",Roboto,Arial,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f);font-size:14px;line-height:1.5;margin:0}
+.pad{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* top nav */
+.topnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--surface);border-bottom:1px solid var(--line)}
+.topnav .in{max-width:1320px;margin-inline:auto;display:flex;align-items:center;gap:16px;padding-block:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;color:var(--ink)}
+.mark{width:32px;height:32px;border-radius:8px;background:var(--brand);display:grid;place-items:center;color:#fff}
+.brand small{display:block;font-weight:500;font-size:12px;color:var(--muted)}
+.search{flex:1 1 280px;max-width:440px;margin-inline-start:auto;position:relative}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted)}
+#q{width:100%;font:inherit;padding:9px 12px 9px 38px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(16,24,40,.05)}
+#q:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 4px var(--brand-ring)}
+
+/* layout */
+.layout{max-width:1320px;margin-inline:auto;display:grid;grid-template-columns:240px minmax(0,1fr);gap:24px;padding-block:24px 48px}
+.side{position:sticky;top:76px;align-self:start;display:flex;flex-direction:column;gap:2px}
+.side .lbl{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:0 12px 8px}
+.nav{font:inherit;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;border:0;border-radius:6px;background:transparent;color:var(--ink-2);font-weight:500;cursor:pointer}
+.nav:hover{background:var(--line)}
+.nav[aria-pressed="true"]{background:var(--brand-50);color:var(--brand-700)}
+.nav .c{font-size:12px;font-weight:500;padding:0 8px;border-radius:999px;background:var(--line);color:var(--ink-2)}
+.nav[aria-pressed="true"] .c{background:var(--surface);color:var(--brand-700)}
+button:focus-visible,a:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
+main{min-width:0}
+.ph h1{margin:0;font-size:24px;font-weight:600;letter-spacing:-.01em}
+.ph p{margin:4px 0 0;color:var(--muted);max-width:70ch}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:2px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--ink-2)}
+.pill i{font-style:normal;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;background:var(--brand-50);color:var(--brand-700);font-size:10px;font-weight:700}
+
+.area{margin-top:28px}
+.area-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.area-head h2{margin:0;font-size:16px;font-weight:600}
+.badge{font-size:12px;font-weight:500;padding:2px 8px;border-radius:999px;background:var(--brand-50);color:var(--brand-700)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:16px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.card-h{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.card-h h3{margin:0;font-size:15px;font-weight:600}
+.gov{font-size:12px;color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:1px 8px;white-space:nowrap}
+.ladder{list-style:none;margin:0;padding:12px 16px 4px}
+.step{display:grid;grid-template-columns:32px minmax(0,1fr);gap:10px;position:relative;padding-bottom:12px}
+.step:not(:last-child)::before{content:"";position:absolute;left:15.5px;top:34px;bottom:4px;border-left:1px dashed var(--line-2)}
+.av{width:32px;height:32px;border-radius:50%;background:var(--brand-50);color:var(--brand-700);display:grid;place-items:center;font-size:11px;font-weight:700;position:relative}
+.av b{position:absolute;right:-4px;bottom:-4px;width:16px;height:16px;border-radius:50%;background:var(--brand);color:#fff;font-size:9px;display:grid;place-items:center;border:2px solid var(--surface)}
+.role{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.name{font-weight:600;color:var(--ink);word-break:break-word}
+.num{display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap}
+.call{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface);color:var(--ink-2);font-weight:600;font-size:13px;text-decoration:none;font-variant-numeric:tabular-nums;user-select:all;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.call:hover{border-color:var(--brand);color:var(--brand-700)}
+.call svg{color:var(--brand-600)}
+.copy{font:inherit;font-size:12px;font-weight:600;padding:4px 8px;border:0;border-radius:6px;background:transparent;color:var(--brand-700);cursor:pointer}
+.copy:hover{background:var(--brand-50)}
+.nonum{font-size:12px;color:var(--muted);font-style:italic;margin-top:2px}
+.esc{font-size:11px;color:var(--muted);margin-top:6px}
+.step:last-child .esc{display:none}
+.note{margin-top:6px;font-size:12px;background:var(--warn-bg);border:1px solid var(--warn-line);color:var(--warn);border-radius:6px;padding:4px 8px}
+.extra{background:var(--bg);border-top:1px solid var(--line);padding:12px 16px;display:flex;flex-direction:column;gap:8px;font-size:13px;margin-top:auto}
+.extra .lbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.extra .row{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.extra .row .num{margin-top:0}
+.mail{font-size:12px;color:var(--brand-700);word-break:break-all}
+.empty{padding:48px 0;color:var(--muted);text-align:center}
+.fm .card{padding:14px 16px;gap:10px}
+.fm .card h3{margin:0;font-size:15px;font-weight:600}
+footer{margin-top:40px;color:var(--muted);font-size:12px}
+
+@media (max-width:860px){
+  .layout{grid-template-columns:minmax(0,1fr);gap:16px;padding-top:16px}
+  .side{position:static;flex-direction:row;overflow-x:auto;gap:6px;padding-bottom:4px}
+  .side .lbl{display:none}
+  .nav{flex:none;border:1px solid var(--line);background:var(--surface)}
+  .search{margin-inline-start:0;max-width:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header class="topnav"><div class="in pad">
+  <div class="brand"><span class="mark" aria-hidden="true">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></span>
+    <span>Hub Contacts<small>Last Mile · Operations</small></span></div>
+  <label class="search" for="q">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <input id="q" type="search" placeholder="Search hub, governorate or name" autocomplete="off">
+  </label>
+</div></header>
+
+<div class="layout pad">
+  <aside class="side" id="chips" role="toolbar" aria-label="Filter by area manager"></aside>
+  <main>
+    <div class="ph">
+      <h1>Hub Contact Tree</h1>
+      <p>For each hub, call from top to bottom. If someone doesn't answer, move to the next person (their manager).</p>
+      <div class="legend">
+        <span class="pill"><i>1</i>1st Senior</span><span class="pill"><i>2</i>2nd Senior</span><span class="pill"><i>3</i>Hub Manager</span><span class="pill"><i>4</i>Area Manager</span>
+      </div>
+    </div>
+    <div id="tree"></div>
+    <section class="area fm" id="fm">
+      <div class="area-head"><h2>First Mile (FM)</h2><span class="badge">Pickup warehouses</span></div>
+      <div class="grid" id="fmgrid"></div>
+    </section>
+    <footer>Source: "Copy of LM POCs" sheet (Sheet1 for the structure, Sheet3 and Sheet4 for phone numbers). Empty cells in the sheet are skipped.</footer>
+  </main>
+</div>
+
+<script>
+const AC={
+  sherif:["Sherif Mohamed","01111005628"],
+  mostafaH:["Mostafa Hassan","01118760871"],
+  mostafaE:["Mostafa Elsayed","01142954729"],
+  mohHassan:["Mohamed Hassan","01117426972"],
+  gomaa:["Mohamed Gomaa","01022381555"],
+  hussain:["Hussain Mohamed","01066220280"],
+  ahmedAli:["Ahmed Ali","01009974577"]
+};
+const POC={ammar:["Ammar","01113423423"],nada:["Nada","01008411522"],gouda:["Gouda","01154948424"],mahmoud:["Mahmoud","01006930067"],fatma:["Fatma","01092674183"]};
+
+// [hub, governorate, areaManager(Sheet1), areaKey, senior1, senior2, hubManager, commEmail, pocKey, extras[[name,phone]]]
+const H=[
+["Matrouh Hub","Matrouh","Ahmed Abbas","hussain","","","Mohamed Magdy","Jana.gomaa@ext.bosta.co","",[["Eslam","01040836454"],["Amr","01069131098"]]],
+["ElAgamy Hub","Alexandria (Agamy)","Ahmed Abbas","hussain","Youssef Mostafa|01080360650","Gasser Shaaban|01090950190","Eslam Aewida|01220325098","Jana.gomaa@ext.bosta.co","",[]],
+["Behira Hub","Beheira","Ahmed Abbas","hussain","Youssef Ehab|01013452861","Belal Khatab","","Jana.gomaa@ext.bosta.co","",[["Shiref","01001923963"],["Eslam","01010871649"]]],
+["Alexandria Hub","Alexandria","Ahmed Abbas","hussain","Kerolos Agban","Ahmed Barakat","Raafat Mohamed Mahmoud","Jana.gomaa@ext.bosta.co","",[["Beko","01553803794"]]],
+["Khorshid Hub","Alexandria","Ahmed Abbas","hussain","Amr Elbialy","Mahmoud Anwar","Amir Saber","Jana.gomaa@ext.bosta.co","",[]],
+["Smouha Hub","Alexandria (Smouha)","Ahmed Abbas","hussain","","Ibrahim El Kady","Mohamed Safwat","Jana.gomaa@ext.bosta.co","",[["Hassan","01201650542"]]],
+["Kafr El Sheikh Hub","Kafr El Sheikh","Ahmed Abbas","gomaa","Mahmoud Mokhtar|01050526995","","Ibrahim Hegazy","Jana.gomaa@ext.bosta.co","",[["Abdelaziz","01050142737"]]],
+["Amazon Qena","Qena","Ahmed Samir Abdelaziz","","Ali Mohamed Fath","","Khaled Farhan","","",[]],
+["Amazon Luxor","Luxor","Ahmed Samir Abdelaziz","","Yasser Aboelhagag","Amonis Mansy|01221953147","Mohamed Khalil|01115620964","yasseraboelhagag.bosta@gmail.com","",[]],
+["Amazon Aswan","Aswan","Ahmed Samir Abdelaziz","","","","Galal Sayed Abdel Badee","","",[]],
+["Amazon Sharkia","Sharqia","Ahmed Samir Abdelaziz","","Hany Mohamed","Ahmed Alaa Fathy Ibrahim","Mohamed Amer","","",[]],
+["El-Sharkia Hub","Sharqia","Ahmed Samir Abdelaziz","gomaa","Ahmed Mohamed Ahmed","Nader Lotfy Ebrahem Abdallah|01066385887","","ibrahim.nagaty@ext.bosta.co","",[["Amr","01096114843"],["Ibrahim","01285741868"]]],
+["Monufia Hub","Monufia","Ahmed Zain","ahmedAli","Ahmed Hassanin","","","Salma.essam@ext.bosta.co","",[["Farag","01550060062"],["Emmara","01029366080"]]],
+["El-Mansoura Hub","Dakahlia (Mansoura)","Ahmed Zain","ahmedAli","Reda Ahmed Sira|01559595296","Elsaeed Elkefafy","Mostafa Hassan Abdullah","Salma.essam@ext.bosta.co","",[["Farag","01550060062"]]],
+["Banha Hub","Qalyubia (Banha)","Ahmed Zain","ahmedAli","Mohamed Farg|01550060062","","","Salma.essam@ext.bosta.co","",[["Abu Mesk","01030260797"]]],
+["Mansoura-Talkha Hub","Dakahlia (Talkha)","Ahmed Zain","ahmedAli","Karim Kassem","","Mohamed Gamal Mohamed|01021190946","Salma.essam@ext.bosta.co","",[]],
+["03DSP-Elsadat Hub","Monufia (Sadat City)","Ahmed Zain","ahmedAli","","","Mahmoud Reda","hanan.elsayed@ext.bosta.co","",[]],
+["Qena Hub","Qena","Ahmed Ali Sayed Hussien","ahmedAli","","","Hassan Mohamed|01012787790","hanan.elsayed@ext.bosta.co","",[]],
+["Minya Hub","Minya","Ahmed Ali Sayed Hussien","ahmedAli","Mahmoud Rafat|01099604587","","Mostafa Essam|01000193714","hanan.elsayed@ext.bosta.co","",[]],
+["Luxor Hub","Luxor","Ahmed Ali Sayed Hussien","ahmedAli","Amonis Mansy|01221953147","","Mohamed Khalil|01115620964","hanan.elsayed@ext.bosta.co","",[["Ashraf","01152234323"]]],
+["Hurghada Hub","Red Sea","Ahmed Ali Sayed Hussien","ahmedAli","","","Mohamed Saeed Ezzat Morsy","hanan.elsayed@ext.bosta.co","",[]],
+["Fayoum Hub","Fayoum","Ahmed Ali Sayed Hussien","ahmedAli","","","Ahmed Ewais|01016758444","hanan.elsayed@ext.bosta.co","",[["Ahmed","01141604280"]]],
+["Beni Suef Hub","Beni Suef","Ahmed Ali Sayed Hussien","ahmedAli","Islam Aymen","","Ahmed Gamal|01275759093","hanan.elsayed@ext.bosta.co","",[]],
+["Aswan Hub","Aswan","Ahmed Ali Sayed Hussien","ahmedAli","Amr Mohamed Mahmoud|01112595285","","Galal Sayed Abdel Badee","hanan.elsayed@ext.bosta.co","",[]],
+["Assiut Hub","Assiut","Ahmed Ali Sayed Hussien","ahmedAli","Abdelmonem Mohamed","","Ahmed Hamada Saleh Abdel-Fattah|01147190407","hanan.elsayed@ext.bosta.co","",[]],
+["Sohag Hub","Sohag","Ahmed Ali Sayed Hussien","ahmedAli","","","Abdelrahman Elhawary|01010997774","hanan.elsayed@ext.bosta.co","",[["Ahmed","01147190407"]]],
+["New Valley Hub","New Valley","Ahmed Ali Sayed Hussien","ahmedAli","","","Ahmed Hamada Saleh Abdel-Fattah|01147190407","hanan.elsayed@ext.bosta.co","",[]],
+["Edfo Hub","Aswan (Edfu)","Ahmed Ali Sayed Hussien","ahmedAli","","","Amr Mohamed Mahmoud|01112595285","hanan.elsayed@ext.bosta.co","",[]],
+["Mohandseen Hub","Giza","Hussein Muhammad","hussain","Moamen Mohamed","","Eslam El Wensh","mahmoud.ibrahim@bosta.co","mahmoud",[]],
+["Hawamdya Hub","Giza","Hussein Muhammad","hussain","Abdulrahman Eissa","Abdelmoaez Mahmoud","Aly Qassem","mahmoud.ibrahim@bosta.co","mahmoud",[]],
+["Haram Hub","Giza","Hussein Muhammad","hussain","","Eslam Elsayed","Aly Qassem","mahmoud.ibrahim@bosta.co","mahmoud",[]],
+["Imbaba Hub","Giza","Hussein Muhammad","hussain","Mostafa Ahmed Tawfiq","Ahmed Abdelrehim","Mahmoud Salama","mahmoud.ibrahim@bosta.co","mahmoud",[]],
+["Faisal Hub","Giza","Hussein Muhammad","hussain","Salah Mohamed","","Mostafa Kamel Khalil","Abdelrahman.Mohamed@bosta.co","gouda",[]],
+["Tanta Hub","Gharbia (Tanta)","Mohamed Gomaa","gomaa","Haitham Ahmed Attia|01013837783","","Sherif Rashad|01006204111","ibrahim.nagaty@ext.bosta.co","",[["Amr Box Tanta","01201429868"],["Abdelrahman","01027351239"]]],
+["Sharm El Sheikh Hub","South Sinai","Mohamed Gomaa","gomaa","Sherif Ashraf Abdelaziz|01022563710","","Abdelrahman Magdy Ismail|01096024315","ibrahim.nagaty@ext.bosta.co","",[]],
+["Ismailia Hub","Ismailia","Mohamed Gomaa","gomaa","","","Mohamed Allam","ibrahim.nagaty@ext.bosta.co","",[["Ahmed","01156530889"]]],
+["Damietta Hub","Damietta","Mohamed Gomaa","gomaa","Ahmed Elakkad","Amir Mahmoud","Shady Shawky Ali Afifi|01062755400","ibrahim.nagaty@ext.bosta.co","",[]],
+["Suez Hub","Suez","Mohamed Gomaa","gomaa","Ahmed Mahmoud Ali","","","ibrahim.nagaty@ext.bosta.co","",[["Omar","01012007736"],["Mohamed Saied","01066909486"],["Sayed","01015988678"]]],
+["Port Said Hub","Port Said","Mohamed Gomaa","gomaa","","","Aly Elsharkawy","ibrahim.nagaty@ext.bosta.co","",[["Shady","01062755400"]]],
+["ElMahala Hub","Gharbia (El Mahalla)","Mohamed Gomaa","gomaa","","","Mohamed Adel Elhalwagy","ibrahim.nagaty@ext.bosta.co","",[]],
+["Mokattam Hub","Cairo","Mohamed Hassan Elharamawy","mohHassan","","","Abdallah Adel Mohsen","mohamed.mostafa.ammar@bosta.co","ammar",[]],
+["Madinaty Hub","Cairo","Mohamed Hassan Elharamawy","mohHassan","","","Mahmoud Ayman","mohamed.mostafa.ammar@bosta.co","ammar",[]],
+["Katamya-New Hub","Cairo","Mohamed Hassan Elharamawy","mohHassan","","","Hisham Elmanam","mohamed.mostafa.ammar@bosta.co","ammar",[]],
+["New Cairo Hub","Cairo","Mohamed Hassan Elharamawy","mohHassan","","","Gamal Omar","mohamed.mostafa.ammar@bosta.co","ammar",[]],
+["Zahraa Nasr City Hub","Cairo","Mohamed Hassan Elharamawy","mohHassan","","","Mohamed Hagag","mohamed.mostafa.ammar@bosta.co","ammar",[]],
+["Shorouk Hub","Cairo","Ahmed Abdeltawab Joued","mostafaE","Mohamed Emad Mohamed","","Wessam Ahmed Abdel-hamid","nada.ali@ext.bosta.co","fatma",[]],
+["El Obour Hub","Qalyubia","Ahmed Abdeltawab Joued","mostafaE","Abdelrahman Shehata","Abdelrahman Mohammed","Mohamed Tolba","nada.ali@ext.bosta.co","fatma",[]],
+["Downtown Hub","Cairo","Ahmed Abdeltawab Joued","mostafaE","Ali Ahmed","Ahmed Sabbah Ahmed El Lathey","Ahmed Abdeltawab Joued","nada.ali@ext.bosta.co","fatma",[]],
+["Maadi Hub","Cairo","Ahmed Abdeltawab Joued","mostafaE","Omar El-Daly","","Mostafa Masoud","nada.ali@ext.bosta.co","ammar",[]],
+["Marg Hub","Cairo","Ahmed Abdeltawab Joued","mostafaE","Abdulrahman Gamal","","Nour Tarek","nada.ali@ext.bosta.co","fatma",[]],
+["Zahraa El Maadi Hub","Cairo","Ahmed Abdeltawab Joued","mostafaE","Mostafa Ali","","Mostafa Khodary","nada.ali@ext.bosta.co","",[]],
+["Helwan Hub","Cairo","Mostafa Hassan Ahmed","mostafaH","Kareem Wefky Mohamed","Amir Mahmoud Sayed","Mohamad Ali Mohamed Alawady","mohamed.mostafa.ammar@bosta.co","",[]],
+["October Hub","Giza","Mostafa Hassan Ahmed","mostafaH","Badran Reda Farouk","Mohamed Abdelfattah","Sayed Mohamed","Abdelrahman.Mohamed@bosta.co","gouda",[]],
+["Hadayk October Hub","Giza","Mostafa Hassan Ahmed","mostafaH","Mahmoud Mostafa Mohamed Sayed","","Hazem Nabil","Abdelrahman.Mohamed@bosta.co","gouda",[]],
+["New October Hub","Giza","Mostafa Hassan Ahmed","mostafaH","Mohamed Mady Youssef","","Eslam Fahmy","Abdelrahman.Mohamed@bosta.co","gouda",[]],
+["Nasr City Hub","Cairo","Sherif Mohamed","sherif","Salah Abdelmaged Mohamed","Amr Abdel Wadowd Gad","Youssef Hussien","habiba.badr@ext.bosta.co","",[]],
+["Heliopolis Hub","Cairo","Sherif Mohamed","sherif","Abdelrahman Mohammad","","Wael Mahmoud","habiba.badr@ext.bosta.co","nada",[]],
+["Gesr Elsuez Hub","Cairo","Sherif Mohamed","sherif","Mohamed Emad Mohamed","Said Soliman","Ahmed Mohamed Abdelrahman","habiba.badr@ext.bosta.co","nada",[]],
+["Shobra Hub","Cairo","Sherif Mohamed","sherif","Omar Farghaly","Mohamed Abdelkader","Bahaa Mohsen","habiba.badr@ext.bosta.co","nada",[]]
+];
+const FM=[
+["FM Maadi",[["Saaed (Manager)","01111860696"],["Haytham","01210443288"],["Waleed","01154959808"],["Keto","01207567634"],["Abdo","01157794778"],["Taza","01152483809"]]],
+["FM Obour",[["Ali","01125593391"],["Saykoo","01102509951"]]],
+["FM Downtown",[["Emam","01017777252"]]],
+["FM New Cairo",[["Youssef","01157194104"],["Yousef","01094017325"],["Zain","01016444939"],["Mohamed Alaa","01150476568"]]],
+["FM Aburawash",[["Mazen","01509988050"],["Abdelrahman","01156897650"],["Abdelrahman","01159516208"]]],
+["FM Alex",[["Rafat","01206700781"],["Mostafa","01025952888"],["Ahmed Hassan","01208697350"]]],
+["FM Agamy",[["Eslam","01220325098"]]],
+["FM Box Orders Cairo",[["Ahmed","01102650598"]]]
+];
+
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const sameAM=(am,ak)=>!!ak&&(am.startsWith(AC[ak][0])||(ak==="hussain"&&am.startsWith("Hussein")));
+const split=s=>{const [n,p]=s.split("|");return {n,p:p||""}};
+const initials=n=>n.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join("");
+const PH='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>';
+function numHTML(p){
+  if(!p) return '<div class="nonum">No number in sheet</div>';
+  return `<div class="num"><a class="call" href="tel:+2${p}">${PH}${p}</a><button class="copy" data-p="${p}" type="button">Copy</button></div>`;
+}
+function card(h){
+  const [hub,gov,am,ak,s1,s2,m,mail,pk,ex]=h;
+  const steps=[];
+  if(s1) steps.push(["1st Senior",split(s1),1]);
+  if(s2) steps.push(["2nd Senior",split(s2),2]);
+  if(m) steps.push(["Hub Manager",split(m),3]);
+  if(ak){const [cn,cp]=AC[ak];const same=sameAM(am,ak);
+    steps.push(["Area Manager",{n:same?am:cn,p:cp,note:same?"":`Sheet1 lists the area manager as: ${am}`},4]);
+  } else steps.push(["Area Manager",{n:am,p:""},4]);
+  const li=steps.map(([r,x,lv])=>`<li class="step"><div class="av">${esc(initials(x.n))}<b>${lv}</b></div>
+      <div><div class="role">${r}</div><div class="name">${esc(x.n)}</div>${numHTML(x.p)}
+      ${x.note?`<div class="note">${esc(x.note)}</div>`:""}
+      <div class="esc">No answer? Call the next one ↓</div></div></li>`).join("");
+  const rows=[];
+  if(pk){const [pn,pp]=POC[pk];rows.push(`<div class="lbl">LM POC</div><div class="row"><span>${pn}</span>${numHTML(pp)}</div>`);}
+  if(ex.length) rows.push(`<div class="lbl">Other hub numbers</div>`+ex.map(([n,p])=>`<div class="row"><span>${esc(n)}</span>${numHTML(p)}</div>`).join(""));
+  if(mail) rows.push(`<div class="lbl">Communication email</div><span class="mail">${esc(mail)}</span>`);
+  const extra=rows.length?`<div class="extra">${rows.join("")}</div>`:"";
+  return `<article class="card"><div class="card-h"><h3>${esc(hub)}</h3><span class="gov">${esc(gov)}</span></div><ol class="ladder">${li}</ol>${extra}</article>`;
+}
+const areas=[...new Set(H.map(h=>h[2]))];
+let active="all";
+const chips=document.getElementById("chips");
+chips.innerHTML=`<div class="lbl">Area managers</div>`+
+  [`<button class="nav" type="button" data-a="all" aria-pressed="true">All hubs<span class="c">${H.length}</span></button>`]
+  .concat(areas.map(a=>`<button class="nav" type="button" data-a="${esc(a)}" aria-pressed="false">${esc(a)}<span class="c">${H.filter(h=>h[2]===a).length}</span></button>`)).join("");
+chips.addEventListener("click",e=>{const b=e.target.closest(".nav");if(!b)return;active=b.dataset.a;
+  chips.querySelectorAll(".nav").forEach(c=>c.setAttribute("aria-pressed",c===b));render();});
+const q=document.getElementById("q");q.addEventListener("input",render);
+function render(){
+  const t=q.value.trim().toLowerCase();
+  const out=[];
+  areas.forEach(a=>{
+    if(active!=="all"&&active!==a)return;
+    const list=H.filter(h=>h[2]===a&&(!t||JSON.stringify(h).toLowerCase().includes(t)));
+    if(!list.length)return;
+    const ak=list[0][3];const ph=sameAM(a,ak)?AC[ak][1]:"";
+    out.push(`<section class="area"><div class="area-head"><h2>${esc(a)}</h2><span class="badge">${list.length} ${list.length===1?"hub":"hubs"}</span>${ph?numHTML(ph):""}</div><div class="grid">${list.map(card).join("")}</div></section>`);
+  });
+  document.getElementById("tree").innerHTML=out.join("")||'<div class="empty">No results. Try another name or clear the filter.</div>';
+  const fm=FM.filter(f=>!t||JSON.stringify(f).toLowerCase().includes(t));
+  document.getElementById("fm").hidden=active!=="all"||!fm.length;
+  document.getElementById("fmgrid").innerHTML=fm.map(([n,l])=>`<article class="card"><h3>${n}</h3>${l.map(([a,p])=>`<div class="extra" style="background:none;border:0;padding:0"><div class="row"><span>${esc(a)}</span>${numHTML(p)}</div></div>`).join("")}</article>`).join("");
+}
+document.addEventListener("click",e=>{const b=e.target.closest(".copy");if(!b)return;
+  const done=()=>{b.textContent="Copied";setTimeout(()=>b.textContent="Copy",1200)};
+  try{navigator.clipboard.writeText(b.dataset.p).then(done,()=>{})}catch(_){}});
+render();
+</script>
